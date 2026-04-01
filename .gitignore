@@ -1,0 +1,17 @@
+# Local terraform directory (contains binaries/plugins)
+.terraform/
+
+# State files (should usually be in a remote backend, not Git)
+*.tfstate
+*.tfstate.backup
+
+# Sensitive variables
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log
+
+# Personal key files
+keyfile
+*.pem
