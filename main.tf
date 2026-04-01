@@ -142,3 +142,12 @@ resource "local_file" "faah" {
   content  = tls_private_key.rsa.private_key_pem
   filename = "keyfile"
 }
+
+#-----------S3------------
+terraform {
+  backend "s3" {
+    bucket         = "your-unique-terraform-state-bucket"
+    key            = "dev/terraform.tfstate"
+    region         = "us-west-2"
+  }
+}
