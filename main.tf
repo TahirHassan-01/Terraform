@@ -16,12 +16,12 @@ data "aws_ami" "ubuntu" {
 
 # 4. Create the Server and CONNECT everything
 resource "aws_instance" "AB-lab-instance" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.public_subnet.id
-  key_name                    = "terraform-key"
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.public_subnet.id
+  key_name      = "terraform-key"
   # NEW: Attach the Security Group
-  vpc_security_group_ids      = [aws_security_group.TF_SG.id]
+  vpc_security_group_ids = [aws_security_group.TF_SG.id]
 
   # NEW: Assign a Public IP so you can reach it from Kali
   associate_public_ip_address = true
@@ -60,21 +60,21 @@ resource "aws_subnet" "private_subnet" {
   }
 }
 # 3 : create IGW
-resource "aws_internet_gateway" "myIgw"{
-    vpc_id = aws_vpc.main_vpc.id
+resource "aws_internet_gateway" "myIgw" {
+  vpc_id = aws_vpc.main_vpc.id
 }
 # 4 : route Tables for public subnet
-resource "aws_route_table" "PublicRT"{
-    vpc_id = aws_vpc.main_vpc.id
-    route {
-        cidr_block = "0.0.0.0/0"
-        gateway_id = aws_internet_gateway.myIgw.id
-    }
+resource "aws_route_table" "PublicRT" {
+  vpc_id = aws_vpc.main_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.myIgw.id
+  }
 }
 # 5 : route table association public subnet
-resource "aws_route_table_association" "PublicRTAssociation"{
-    subnet_id = aws_subnet.public_subnet.id
-    route_table_id = aws_route_table.PublicRT.id
+resource "aws_route_table_association" "PublicRTAssociation" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.PublicRT.id
 }
 
 #---------Security Group-----------
