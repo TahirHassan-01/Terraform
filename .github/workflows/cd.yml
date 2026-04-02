@@ -36,3 +36,18 @@ jobs:
       - name: Terraform Apply
         # -auto-approve is mandatory for CD because there is no human to type 'yes'
         run: terraform apply -auto-approve -input=false
+
+
+        # NEW STEP: Extract the key and save it to a file
+      - name: Extract Private Key
+        run: |
+          terraform output -raw private_key > my-terraform-key.pem
+          chmod 400 my-terraform-key.pem
+
+      # NEW STEP: Upload the file so you can download it from your browser
+      - name: Upload Key Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ec2-private-key
+          path: my-terraform-key.pem
+          retention-days: 1 # Key deletes from GitHub after 1 day for security
