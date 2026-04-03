@@ -60,11 +60,11 @@ resource "aws_instance" "app_server" {
                 -e DB_USER=postgres \
                 -e DB_PASSWORD=example \
                 -p 3000:3000 \
-                tahirhassan01/backend-img:latest
+                tahirhassan01/upadted-backend-color:latest
 
               # Run the Frontend
               docker run -d --name frontend -p 80:80 \
-                tahirhassan01/upadted-backend-color:latest
+                tahirhassan01/frontend-img:latest
               EOF
 
   tags = { Name = "Frontend-Backend-Server" }
