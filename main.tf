@@ -99,7 +99,7 @@ resource "aws_instance" "db_server" {
   vpc_security_group_ids = [aws_security_group.db_sg.id]
 
   #key_name = "your-key-name" # The name of the RSA key you generated
-
+  depends_on = [aws_instance.app_server]
 
   user_data = <<-EOF
               #!/bin/bash
