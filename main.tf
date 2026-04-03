@@ -42,8 +42,8 @@ resource "aws_instance" "app_server" {
   # Attach the App Security Group
   vpc_security_group_ids = [aws_security_group.TF_SG.id]
 
-  key_name = "your-key-name"
-
+  key_name                    = "terraform-key"
+  associate_public_ip_address = true
   # The Startup Script
   user_data = <<-EOF
               #!/bin/bash
