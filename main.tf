@@ -44,6 +44,8 @@ resource "aws_instance" "app_server" {
 
   key_name                    = "terraform-key"
   associate_public_ip_address = true
+  depends_on                  = [aws_instance.db_server]
+
   # The Startup Script
   user_data = <<-EOF
               #!/bin/bash
@@ -99,7 +101,7 @@ resource "aws_instance" "db_server" {
   vpc_security_group_ids = [aws_security_group.db_sg.id]
 
   #key_name = "your-key-name" # The name of the RSA key you generated
-  depends_on = [aws_instance.app_server]
+  #depends_on = [aws_instance.app_server]
 
   user_data = <<-EOF
               #!/bin/bash
