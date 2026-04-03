@@ -64,7 +64,7 @@ resource "aws_instance" "app_server" {
 
               # Run the Frontend
               docker run -d --name frontend -p 80:80 \
-                tahirhassan01/frontend-img:latest
+                tahirhassan01/upadted-backend-color:latest
               EOF
 
   tags = { Name = "Frontend-Backend-Server" }
