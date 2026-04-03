@@ -116,7 +116,7 @@ resource "aws_instance" "db_server" {
                 --restart always \
                 postgres:16
               EOF
-  tags = { Name = "Backend-Database" }
+  tags      = { Name = "Backend-Database" }
 }
 
 
