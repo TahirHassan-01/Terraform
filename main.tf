@@ -45,7 +45,8 @@ resource "aws_instance" "app_server" {
   key_name                    = "terraform-key"
   associate_public_ip_address = true
   depends_on                  = [aws_instance.db_server]
-
+  #allocation_id               = aws_eip.ec2_eip.id
+  #fghj
   # The Startup Script
   user_data = <<-EOF
               #!/bin/bash
@@ -274,6 +275,11 @@ resource "aws_eip" "nat_eip" {
   domain = "vpc"
   tags   = { Name = "NAT-EIP" }
 }
+resource "aws_eip" "ec2_eip" {
+  domain = "vpc"
+  tags   = { Name = "ec2-eip" }
+
+}
 resource "aws_nat_gateway" "main_nat" {
   allocation_id = aws_eip.nat_eip.id
   subnet_id     = aws_subnet.public_subnet.id # Place in Public Subnet
@@ -297,4 +303,9 @@ resource "aws_route_table" "private_rt" {
 resource "aws_route_table_association" "private_assoc" {
   subnet_id      = aws_subnet.private_subnet.id
   route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.app_server.id
+  allocation_id = aws_eip.ec2_eip.id
 }
