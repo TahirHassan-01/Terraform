@@ -5,6 +5,7 @@ provider "aws" {
 #---------instance----------
 
 # 3. Find the Ubuntu Image (Same as before)
+#
 data "aws_ami" "ubuntu" {
   most_recent = true
   filter {
@@ -31,8 +32,76 @@ resource "aws_instance" "AB-lab-instance" {
   }
 }
 
+#----instance web-----
 
+resource "aws_instance" "app_server" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.public_subnet.id # Must be Public
 
+  # Attach the App Security Group
+  vpc_security_group_ids = [aws_security_group.TF_SG.id]
+
+  key_name = "your-key-name"
+
+  # The Startup Script
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update
+              apt-get install -y docker.io
+              systemctl start docker
+              usermod -aG docker ubuntu
+
+              # Run the Backend first, pointing to the DB Instance IP
+              docker run -d --name backend \
+                -e DB_HOST=${aws_instance.db_server.private_ip} \
+                -e DB_USER=postgres \
+                -e DB_PASSWORD=example \
+                -p 3000:3000 \
+                tahirhassan01/backend-img:latest
+
+              # Run the Frontend
+              docker run -d --name frontend -p 80:80 \
+                tahirhassan01/frontend-img:latest
+              EOF
+
+  tags = { Name = "Frontend-Backend-Server" }
+}
+
+resource "aws_security_group" "db_sg" {
+  name   = "db-sg"
+  vpc_id = aws_vpc.main_vpc.id
+
+  ingress {
+    from_port = 5432
+    to_port   = 5432
+    protocol  = "tcp"
+    # FIXED: Changed 'security_group_id' to 'security_groups'
+    security_groups = [aws_security_group.TF_SG.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "Database-SG" }
+}
+
+resource "aws_instance" "db_server" {
+  ami           = data.aws_ami.ubuntu.id # Ubuntu 24.04 (us-west-2)
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.private_subnet.id # Must be Private
+
+  # Attach the DB Security Group
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+
+  #key_name = "your-key-name" # The name of the RSA key you generated
+
+  tags = { Name = "Backend-Database" }
+}
 
 
 
@@ -169,4 +238,33 @@ terraform {
   }
 
 
+}
+#---------NAT--------
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+  tags   = { Name = "NAT-EIP" }
+}
+resource "aws_nat_gateway" "main_nat" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnet.id # Place in Public Subnet
+
+  tags = { Name = "Main-NAT-Gateway" }
+
+  # Ensure IGW exists before creating NAT
+  depends_on = [aws_internet_gateway.myIgw]
+}
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main_nat.id
+  }
+
+  tags = { Name = "Private-Route-Table" }
+}
+
+resource "aws_route_table_association" "private_assoc" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_rt.id
 }
