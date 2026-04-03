@@ -100,6 +100,22 @@ resource "aws_instance" "db_server" {
 
   #key_name = "your-key-name" # The name of the RSA key you generated
 
+
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update
+              apt-get install -y docker.io
+              systemctl start docker
+              systemctl enable docker
+
+              docker run -d --name postgres-db \
+                -e POSTGRES_USER=postgres \
+                -e POSTGRES_PASSWORD=example \
+                -e POSTGRES_DB=colorsdb \
+                -p 5432:5432 \
+                --restart always \
+                postgres:16
+              EOF
   tags = { Name = "Backend-Database" }
 }
 
@@ -151,6 +167,17 @@ resource "aws_security_group" "TF_SG" {
   name        = "security group using Terraform"
   description = "security group using Terraform"
   vpc_id      = aws_vpc.main_vpc.id
+
+
+  ingress {
+    description      = "Backend API"
+    from_port        = 3000
+    to_port          = 3000
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
 
   ingress {
     description      = "HTTPS"
